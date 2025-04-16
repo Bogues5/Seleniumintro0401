@@ -23,11 +23,11 @@ public class skelbiult {
         List<Double> allPricesList = new ArrayList<>();
 
         // Puslapių URL šablonas
-        String baseUrl = "https://www.skelbiu.lt/skelbimai/%d?autocompleted=1&keywords=verpimo+ratelis&cities=0&distance=0&mainCity=0&search=1&category_id=0&user_type=0&ad_since_min=0&ad_since_max=0&visited_page=%d&orderBy=-1&detailsSearch=0";
+        String baseUrl = "https://www.skelbiu.lt/skelbimai/1?autocompleted=1&keywords=barzdaskute&cities=0&distance=0&mainCity=0&search=1&category_id=5&user_type=0&ad_since_min=0&ad_since_max=0&visited_page=2&orderBy=-1&detailsSearch=0";
 
-        // Naudojame while ciklą, kad pereitume per tris puslapius
+        // Naudojame while ciklą, kad pereitume per trylika puslapiu
         int page = 1;
-        while (page <= 3) {
+        while (page <= 13) {
             String url = String.format(baseUrl, page, page);
             driver.get(url);
 
@@ -69,7 +69,7 @@ public class skelbiult {
         Double[] allPrices = allPricesList.toArray(new Double[0]);
 
         // Spausdiname visas kainas stulpeliu
-        System.out.println("Visos kainos iš trijų puslapių:");
+        System.out.println("Visos kainos iš trylikos puslapių:");
         for (Double price : allPrices) {
             System.out.println(price);
         }
@@ -81,7 +81,7 @@ public class skelbiult {
                 sum += price;
             }
             double average = sum / allPrices.length;
-            System.out.println("Vidutinė kaina iš visų trijų puslapių: " + average);
+            System.out.println("Vidutinė kaina iš visų trylikos puslapių: " + average);
         } else {
             System.out.println("Kainų nerasta.");
         }
@@ -90,3 +90,4 @@ public class skelbiult {
         driver.quit();
     }
 }
+
