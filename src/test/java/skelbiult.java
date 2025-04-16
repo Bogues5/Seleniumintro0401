@@ -12,54 +12,81 @@ import java.util.List;
 
 public class skelbiult {
     @Test
-    public void selenium(){
-
+    public void selenium() {
         WebDriver driver = new ChromeDriver();
         driver.manage().window().maximize();
 
         // Nustatome laukimo laiką
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-        // Atidarome pirmą puslapį
-        String url = "https://www.skelbiu.lt/skelbimai/1?autocompleted=1&keywords=verpimo+ratelis&cities=0&distance=0&mainCity=0&search=1&category_id=0&user_type=0&ad_since_min=0&ad_since_max=0&visited_page=1&orderBy=-1&detailsSearch=0";
-        driver.get(url);
+        // Naudojame List<Double> kainoms rinkti
+        List<Double> allPricesList = new ArrayList<>();
 
-        // Laukiame, kol puslapis užsikraus ir skelbimų konteineriai taps matomi
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[contains(@class, 'standard')]")));
+        // Puslapių URL šablonas
+        String baseUrl = "https://www.skelbiu.lt/skelbimai/%d?autocompleted=1&keywords=verpimo+ratelis&cities=0&distance=0&mainCity=0&search=1&category_id=0&user_type=0&ad_since_min=0&ad_since_max=0&visited_page=%d&orderBy=-1&detailsSearch=0";
 
-        // Randame visus skelbimų konteinerius
-        List<WebElement> adElements = driver.findElements(By.className("content-block"));
+        // Naudojame while ciklą, kad pereitume per tris puslapius
+        int page = 1;
+        while (page <= 3) {
+            String url = String.format(baseUrl, page, page);
+            driver.get(url);
 
-        // Sąrašas kainoms saugoti
-        List<Double> prices = new ArrayList<>();
+            // Laukiame, kol puslapis užsikraus
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[contains(@class, 'standard')]")));
 
-        // Surenkame kainas iš pirmo puslapio
-        for (WebElement adElement : adElements) {
-            try {
-                // Ištraukiame kainos tekstą (pvz., "15,8 e")
-                String priceElement = adElement.findElement(By.className("price")).getText();
-                System.out.println(priceElement);
-                // Išvalome tekstą: pašaliname visus simbolius, išskyrus skaitmenis ir kablelį, tada kablelį keičiame į tašką
-                String cleanedPrice = priceElement.replaceAll("[^0-9,]", "").replace(",", ".");
-                // Konvertuojame tekstą į double
-                double price = Double.parseDouble(cleanedPrice);
-                prices.add(price);
-            } catch (Exception e) {
-                System.out.println("Klaida apdorojant kainą: " + e.getMessage());
+            // Priimame slapukus, jei yra toks mygtukas (tik pirmame puslapyje)
+            if (page == 1) {
+                try {
+                    WebElement acceptBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("onetrust-accept-btn-handler")));
+                    acceptBtn.click();
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    System.out.println("Slapukų mygtukas nerastas, tęsiame...");
+                }
             }
+
+            // Randame visus skelbimų konteinerius
+            List<WebElement> adElements = driver.findElements(By.className("content-block"));
+
+            // Surenkame kainas iš dabartinio puslapio
+            for (WebElement adElement : adElements) {
+                try {
+                    String priceElement = adElement.findElement(By.className("price")).getText(); // Pvz., "15,8 e"
+                    // Išvalome tekstą: pašaliname visus simbolius, išskyrus skaitmenis ir kablelį, tada pakeičiame kablelį į tašką
+                    String cleanedPrice = priceElement.replaceAll("[^0-9,]", "").replace(",", ".");
+                    Double price = Double.parseDouble(cleanedPrice);
+                    allPricesList.add(price); // Pridedame kainą į sąrašą
+                } catch (Exception e) {
+                    System.out.println("Klaida apdorojant kainą: " + e.getMessage());
+                }
+            }
+
+            // Didiname puslapio numerį
+            page++;
         }
 
-        // Spausdiname kainas stulpeliu nuo viršaus į apačią
-        System.out.println("Kainos iš pirmo puslapio:");
-        for (Double price : prices) {
+        // Konvertuojame List<Double> į Double[] masyvo tipą
+        Double[] allPrices = allPricesList.toArray(new Double[0]);
+
+        // Spausdiname visas kainas stulpeliu
+        System.out.println("Visos kainos iš trijų puslapių:");
+        for (Double price : allPrices) {
             System.out.println(price);
+        }
+
+        // Apskaičiuojame ir spausdiname vidurkį
+        if (allPrices.length > 0) {
+            double sum = 0;
+            for (Double price : allPrices) {
+                sum += price;
+            }
+            double average = sum / allPrices.length;
+            System.out.println("Vidutinė kaina iš visų trijų puslapių: " + average);
+        } else {
+            System.out.println("Kainų nerasta.");
         }
 
         // Uždaryti naršyklę
         driver.quit();
     }
 }
-
-
-
-
